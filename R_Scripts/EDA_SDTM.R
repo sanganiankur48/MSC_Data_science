@@ -5,6 +5,12 @@ library(dplyr)
 library(gridExtra)
 library(purrr)
 
+# Function to add data labels and total labels
+add_labels <- function(plot, data, column) {
+  plot + 
+    geom_text(stat='count', aes(label=..count..), vjust=-0.5, position = position_dodge(0.9)) + 
+    ggtitle(paste0("Total ", column, ": ", nrow(data)))
+}
 
 # EDA for SDTM.dm
 print("EDA for SDTM.dm")
@@ -12,67 +18,52 @@ print("EDA for SDTM.dm")
 # Descriptive statistics for gender and race
 gender_stats <- table(dm$SEX)
 print(gender_stats)
-
 race_stats <- table(dm$RACE)
 print(race_stats)
 
-# Histogram for age
-age_plot <- ggplot(dm, aes(AGE)) +
-  geom_histogram(bins = 30, fill = "blue", alpha = 0.7) +
-  labs(title = "Age Distribution", x = "Age", y = "Count")
-print(age_plot)
+# Advanced Age Distribution with density plot
+age_density_plot <- ggplot(dm, aes(x = AGE)) +
+  geom_histogram(aes(y = ..density..), bins = 30, fill = "blue", alpha = 0.7) +
+  geom_density(alpha = 0.5, fill = "#FF66CC") +
+  labs(title = "Age Distribution with Density", x = "Age", y = "Density")
+print(age_density_plot)
 
 # EDA for SDTM.ae
 print("EDA for SDTM.ae")
 
-# Number of events, severity, relationship to study drug
-event_count <- nrow(ae)
-severity_stats <- table(ae$AESEV) # Assuming SEV for severity
-relationship_stats <- table(ae$AEREL) # Assuming RELY for relationship to study drug
+# Advanced Bar plots for severity and relationship
 
-print(paste("Total adverse events:", event_count))
-print(severity_stats)
-print(relationship_stats)
+ae$AEREL <- ifelse(is.na(ae$AEREL) | ae$AEREL == "", "UNKNOWN", ae$AEREL)
 
-# Bar plots for severity and relationship
-severity_plot <- ggplot(ae, aes(AESEV)) +
-  geom_bar(fill = "red", alpha = 0.7) +
-  labs(title = "Adverse Events by Severity", x = "Severity", y = "Count")
-print(severity_plot)
+severity_colored_plot <- ggplot(ae, aes(x = AESEV, fill = AESEV)) +
+  geom_bar(alpha = 0.7) +
+  labs(title = "Adverse Events by Severity", x = "Severity", y = "Count") +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Set2")
+severity_colored_plot <- add_labels(severity_colored_plot, ae, "AE Severity")
+print(severity_colored_plot)
 
-relationship_plot <- ggplot(ae, aes(AEREL)) +
-  geom_bar(fill = "green", alpha = 0.7) +
-  labs(title = "Adverse Events by Relationship to Study Drug", x = "Relationship", y = "Count")
-print(relationship_plot)
+relationship_colored_plot <- ggplot(ae, aes(x = AEREL, fill = AEREL)) +
+  geom_bar(alpha = 0.7) +
+  labs(title = "Adverse Events by Relationship to Study Drug", x = "Relationship", y = "Count") +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Set3")
+relationship_colored_plot <- add_labels(relationship_colored_plot, ae, "AE Relationship")
+print(relationship_colored_plot)
 
+# Cross Frequency table for Severity and Relationship
+cross_table <- table(ae$AESEV, ae$AEREL)
+print(cross_table)
 
 # EDA for SDTM.ex
 print("EDA for SDTM.ex")
 
-# Number of exposure records and treatment details
-exposure_count <- nrow(ex)
-treatment_stats <- table(ex$EXTRT)  # Assuming TRT is the treatment column
-
-print(paste("Total exposure records:", exposure_count))
-print(treatment_stats)
-
-# Bar plot for treatment regimen
-treatment_plot <- ggplot(ex, aes(EXTRT)) +
-  geom_bar(fill = "blue", alpha = 0.7) +
-  labs(title = "Records by Treatment", x = "Treatment", y = "Count")
-print(treatment_plot)
-
-# EDA for SDTM.lb
-print("EDA for SDTM.lb")
-
-# Number of records, lab test type, test results, and units
-record_count <- nrow(lb)
-test_type_stats <- table(lb$LBTESTCD)  # Assuming TESTCD is the lab test code column
-unit_stats <- table(lb$LBSTRESU)     # Assuming LBSTRESU is the lab test unit column
-
-print(paste("Total lab records:", record_count))
-print(test_type_stats)
-print(unit_stats)
-
-
+# Advanced Bar plot for treatment regimen with color
+treatment_colored_plot <- ggplot(ex, aes(x = EXTRT, fill = EXTRT)) +
+  geom_bar(alpha = 0.7) +
+  labs(title = "Records by Treatment", x = "Treatment", y = "Count") +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Set1")
+treatment_colored_plot <- add_labels(treatment_colored_plot, ex, "Treatment")
+print(treatment_colored_plot)
 
